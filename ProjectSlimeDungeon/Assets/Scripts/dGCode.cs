@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class dGCode : MonoBehaviour
 {
-    
+    public int roomNumber;
+
     [Header("Room Prefabs")]
     public Room spawn;
     public Room[] bottomConnectionRooms;
@@ -49,6 +50,7 @@ public class dGCode : MonoBehaviour
         {
             SpawnPoint nextSpawn = openSpawns[Random.Range(0, openSpawns.Count)];
             Vector3 spawnPos = nextSpawn.gameObject.transform.position;
+            Room r = FilterThenSelectRoom(bottomConnectionRooms, nextSpawn);
             if (spawnPos.x >= mapMaxX && spawnPos.x <= mapMinX || spawnPos.z >= mapMaxZ && spawnPos.z <= mapMinZ)
             {
                 openSpawns.Remove(nextSpawn);
@@ -64,6 +66,7 @@ public class dGCode : MonoBehaviour
                 {
                     selectedRoom = topConnectionRooms[Random.Range(0, topConnectionRooms.Length)];
                     GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
+                    newRoom.name += roomNumber;
                     nextSpawn.spawned = true;
                     for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
                     {
@@ -78,6 +81,7 @@ public class dGCode : MonoBehaviour
                 {
                     selectedRoom = bottomConnectionRooms[Random.Range(0, bottomConnectionRooms.Length)];
                     GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
+                    newRoom.name += roomNumber;
                     nextSpawn.spawned = true;
                     for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
                     {
@@ -92,6 +96,7 @@ public class dGCode : MonoBehaviour
                 {
                     selectedRoom = leftConnectionRooms[Random.Range(0, leftConnectionRooms.Length)];
                     GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
+                    newRoom.name += roomNumber;
                     nextSpawn.spawned = true;
                     for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
                     {
@@ -106,6 +111,7 @@ public class dGCode : MonoBehaviour
                 {
                     selectedRoom = rightConnectionRooms[Random.Range(0, rightConnectionRooms.Length)];
                     GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
+                    newRoom.name += roomNumber;
                     nextSpawn.spawned = true;
                     for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
                     {
@@ -117,7 +123,23 @@ public class dGCode : MonoBehaviour
                     openSpawns.Remove(nextSpawn);
                 }
             }
+            roomNumber++;
             yield return new WaitForSeconds(1);
         }
+    }
+
+    public Room FilterThenSelectRoom(Room[] rooms, SpawnPoint SP)
+    {
+        Room selectedRoom;
+        RaycastHit hit;
+
+        if (SP.openingDirection != 2 && Physics.Raycast(SP.transform.position, transform.forward, out hit, 100))
+        {
+            Debug.Log("Ray = " + SP.transform.parent.name + " " + SP.transform.name + " " + "hit = " + hit.transform.parent + " " + hit.transform.name);
+
+        }
+
+
+        return null;
     }
 }

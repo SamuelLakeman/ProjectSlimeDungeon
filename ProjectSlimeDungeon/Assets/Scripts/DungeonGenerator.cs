@@ -91,10 +91,4 @@ public class DungeonGenerator : MonoBehaviour
             map[X - 1, currentLayer, Z] = newRoom.GetComponent<Room>();
         }
     }
-
-    public List<Room> SelectedRoomsThroughFilter()
-    {
-        List<Room> possibleRooms;
-
-    }
 }
