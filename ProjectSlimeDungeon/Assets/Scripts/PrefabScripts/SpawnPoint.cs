@@ -10,14 +10,13 @@ public class SpawnPoint : MonoBehaviour
     //3 = Left spawn point needs Right connection
     //4 = Right spawn point need Left connection
     public bool spawned = false;
+    public SpawnPoint partner;
 
     void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("SpawnPoint"))
         {
-            GameObject DG = GameObject.FindObjectOfType<dGCode>().gameObject;
-            DG.GetComponent<dGCode>().openSpawns.Remove(this);
+            partner = other.GetComponent<SpawnPoint>();
         }
     }
-
 }

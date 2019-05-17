@@ -8,8 +8,7 @@ public class SPDestroyer : MonoBehaviour
     {
         if (other.CompareTag("SpawnPoint"))
         {
-            GameObject DG = GameObject.FindObjectOfType<dGCode>().gameObject;
-            DG.GetComponent<dGCode>().openSpawns.Remove(other.GetComponent<SpawnPoint>());
+            Destroy(other.gameObject);
         }
     }
 }

@@ -5,6 +5,7 @@ using UnityEngine;
 public class dGCode : MonoBehaviour
 {
     public int roomNumber;
+    public float generationSpeed;
 
     [Header("Room Prefabs")]
     public Room spawn;
@@ -15,33 +16,34 @@ public class dGCode : MonoBehaviour
 
     [Header("Dungeon Generation Data")]
     public List<SpawnPoint> openSpawns = new List<SpawnPoint>();
-    public List<Room> rooms= new List<Room>();
+    public List<SpawnPoint> SPList = new List<SpawnPoint>();
     private Room startRoom;
-    private int currentLayer = 0;
-    private bool closeOpenDoorways; 
-    public int mapMinX,mapMaxX,mapMinZ,mapMaxZ;
-    
+    private bool closeOpenDoorways;
+    public int mapMinX, mapMaxX, mapMinZ, mapMaxZ;
+
     [Header("Dungeon Information")]
     public int seed;
     public bool generationComplete;
-    
+
     public void Start()
     {
         openSpawns = new List<SpawnPoint>();
-        seed = Random.Range(0,int.MaxValue);
+        seed = Random.Range(0, int.MaxValue);
         StartGeneration();
     }
-    
-    public void StartGeneration() 
+
+    public void StartGeneration()
     {
         GameObject s = Instantiate(spawn.gameObject);
         startRoom = s.GetComponent<Room>();
-        for(int i = 0; i < s.GetComponent<Room>().roomSpawnPoints.Length; i++)
+        for (int i = 0; i < s.GetComponent<Room>().roomSpawnPoints.Length; i++)
         {
             openSpawns.Add(s.GetComponent<Room>().roomSpawnPoints[i]);
         }
 
         StartCoroutine("GenerateFirstLayer");
+
+
     }
 
     public IEnumerator GenerateFirstLayer()
@@ -49,97 +51,261 @@ public class dGCode : MonoBehaviour
         while (openSpawns.Count > 0)
         {
             SpawnPoint nextSpawn = openSpawns[Random.Range(0, openSpawns.Count)];
-            Vector3 spawnPos = nextSpawn.gameObject.transform.position;
-            Room r = FilterThenSelectRoom(bottomConnectionRooms, nextSpawn);
-            if (spawnPos.x >= mapMaxX && spawnPos.x <= mapMinX || spawnPos.z >= mapMaxZ && spawnPos.z <= mapMinZ)
+            if (nextSpawn == null)
             {
+                Debug.Log("we got a nuller!");
                 openSpawns.Remove(nextSpawn);
-                Debug.Log("end1");
-                yield return new WaitForSeconds(1);
+                yield return new WaitForSeconds(generationSpeed);
             }
             else
             {
-                Room selectedRoom;
-                // Room extensionRoom = nextSpawn.parent.GetComponent<Room>();
-                //selecting what room to make and instantiating it
-                if (nextSpawn.openingDirection == 1)
+                if (nextSpawn.spawned == false)
                 {
-                    selectedRoom = topConnectionRooms[Random.Range(0, topConnectionRooms.Length)];
-                    GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
-                    newRoom.name += roomNumber;
-                    nextSpawn.spawned = true;
-                    for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
+                    Vector3 spawnPos = nextSpawn.gameObject.transform.position;
+                    if (spawnPos.x >= mapMaxX || spawnPos.x <= mapMinX || spawnPos.z >= mapMaxZ || spawnPos.z <= mapMinZ)
                     {
-                        if (newRoom.GetComponent<Room>().roomSpawnPoints[i].openingDirection != 2)
+                        openSpawns.Remove(nextSpawn);
+                        yield return new WaitForSeconds(generationSpeed);
+                    }
+                    else
+                    {
+
+                        Room selectedRoom;
+                        // Room extensionRoom = nextSpawn.parent.GetComponent<Room>();
+                        //selecting what room to make and instantiating it
+                        if (nextSpawn.openingDirection == 1)
                         {
-                            openSpawns.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
+                            selectedRoom = FilterThenSelectRoom(topConnectionRooms, nextSpawn);
+                            GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
+                            newRoom.name += roomNumber;
+                            nextSpawn.spawned = true;
+                            if(nextSpawn.partner != null)
+                            {
+                                if (openSpawns.Contains(nextSpawn.partner))
+                                {
+                                    openSpawns.Remove(nextSpawn.partner);
+                                }
+                                nextSpawn.partner.spawned = true;
+                            }
+                            for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
+                            {
+                                if (newRoom.GetComponent<Room>().roomSpawnPoints[i].openingDirection != 2)
+                                {
+                                    openSpawns.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
+                                    SPList.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
+                                }
+                            }
+                            openSpawns.Remove(nextSpawn);
+                        }
+                        else if (nextSpawn.openingDirection == 2)
+                        {
+                            selectedRoom = FilterThenSelectRoom(bottomConnectionRooms, nextSpawn);
+                            GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
+                            newRoom.name += roomNumber;
+                            nextSpawn.spawned = true;
+                            if (nextSpawn.partner != null)
+                            {
+                                if (openSpawns.Contains(nextSpawn.partner))
+                                {
+                                    openSpawns.Remove(nextSpawn.partner);
+                                }
+                                nextSpawn.partner.spawned = true;
+                            }
+                            for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
+                            {
+                                if (newRoom.GetComponent<Room>().roomSpawnPoints[i].openingDirection != 1)
+                                {
+                                    openSpawns.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
+                                    SPList.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
+                                }
+                            }
+                            openSpawns.Remove(nextSpawn);
+                        }
+                        else if (nextSpawn.openingDirection == 3)
+                        {
+                            selectedRoom = FilterThenSelectRoom(leftConnectionRooms, nextSpawn);
+                            GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
+                            newRoom.name += roomNumber;
+                            nextSpawn.spawned = true;
+                            if (nextSpawn.partner != null)
+                            {
+                                if (openSpawns.Contains(nextSpawn.partner))
+                                {
+                                    openSpawns.Remove(nextSpawn.partner);
+                                }
+                                nextSpawn.partner.spawned = true;
+                            }
+                            for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
+                            {
+                                if (newRoom.GetComponent<Room>().roomSpawnPoints[i].openingDirection != 4)
+                                {
+                                    openSpawns.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
+                                    SPList.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
+                                }
+                            }
+                            openSpawns.Remove(nextSpawn);
+                        }
+                        else if (nextSpawn.openingDirection == 4)
+                        {
+                            selectedRoom = FilterThenSelectRoom(rightConnectionRooms, nextSpawn);
+                            GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
+                            newRoom.name += roomNumber;
+                            nextSpawn.spawned = true;
+                            if (nextSpawn.partner != null)
+                            {
+                                if (openSpawns.Contains(nextSpawn.partner))
+                                {
+                                    openSpawns.Remove(nextSpawn.partner);
+                                }
+                                nextSpawn.partner.spawned = true;
+                            }
+                            for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
+                            {
+                                if (newRoom.GetComponent<Room>().roomSpawnPoints[i].openingDirection != 3)
+                                {
+                                    openSpawns.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
+                                    SPList.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
+                                }
+                            }
+                            openSpawns.Remove(nextSpawn);
                         }
                     }
-                    openSpawns.Remove(nextSpawn);
+                    roomNumber++;
+                    yield return new WaitForSeconds(generationSpeed);
                 }
-                else if (nextSpawn.openingDirection == 2)
-                {
-                    selectedRoom = bottomConnectionRooms[Random.Range(0, bottomConnectionRooms.Length)];
-                    GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
-                    newRoom.name += roomNumber;
-                    nextSpawn.spawned = true;
-                    for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
-                    {
-                        if (newRoom.GetComponent<Room>().roomSpawnPoints[i].openingDirection != 1)
-                        {
-                            openSpawns.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
-                        }
-                    }
-                    openSpawns.Remove(nextSpawn);
-                }
-                else if (nextSpawn.openingDirection == 3)
-                {
-                    selectedRoom = leftConnectionRooms[Random.Range(0, leftConnectionRooms.Length)];
-                    GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
-                    newRoom.name += roomNumber;
-                    nextSpawn.spawned = true;
-                    for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
-                    {
-                        if (newRoom.GetComponent<Room>().roomSpawnPoints[i].openingDirection != 4)
-                        {
-                            openSpawns.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
-                        }
-                    }
-                    openSpawns.Remove(nextSpawn);
-                }
-                else if (nextSpawn.openingDirection == 4)
-                {
-                    selectedRoom = rightConnectionRooms[Random.Range(0, rightConnectionRooms.Length)];
-                    GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
-                    newRoom.name += roomNumber;
-                    nextSpawn.spawned = true;
-                    for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
-                    {
-                        if (newRoom.GetComponent<Room>().roomSpawnPoints[i].openingDirection != 3)
-                        {
-                            openSpawns.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
-                        }
-                    }
-                    openSpawns.Remove(nextSpawn);
-                }
+                yield return new WaitForSeconds(generationSpeed);
             }
-            roomNumber++;
-            yield return new WaitForSeconds(1);
+        }
+        for (int i = 0; i < SPList.Count; i++)
+        {
+            if (SPList[i].spawned == false)
+            {
+                if (SPList[i].openingDirection == 1)
+                {
+                    GameObject newRoom = Instantiate(topConnectionRooms[0].gameObject, SPList[i].transform.position, topConnectionRooms[0].gameObject.transform.rotation);
+                    newRoom.name += roomNumber;
+                }
+                else if (SPList[i].openingDirection == 2)
+                {
+                    GameObject newRoom = Instantiate(bottomConnectionRooms[0].gameObject, SPList[i].transform.position, bottomConnectionRooms[0].gameObject.transform.rotation);
+                    newRoom.name += roomNumber;
+                }
+                else if (SPList[i].openingDirection == 3)
+                {
+                    GameObject newRoom = Instantiate(leftConnectionRooms[0].gameObject, SPList[i].transform.position, leftConnectionRooms[0].gameObject.transform.rotation);
+                    newRoom.name += roomNumber;
+                }
+                else if (SPList[i].openingDirection == 4)
+                {
+                    GameObject newRoom = Instantiate(rightConnectionRooms[0].gameObject, SPList[i].transform.position, rightConnectionRooms[0].gameObject.transform.rotation);
+                    newRoom.name += roomNumber;
+                }
+                roomNumber++;
+                SPList[i].spawned = true;
+            }
         }
     }
 
     public Room FilterThenSelectRoom(Room[] rooms, SpawnPoint SP)
     {
-        Room selectedRoom;
-        RaycastHit hit;
-
-        if (SP.openingDirection != 2 && Physics.Raycast(SP.transform.position, transform.forward, out hit, 100))
+        List<Room> possibleRooms = new List<Room>();
+        for (int i = 0; i < rooms.Length; i++)
         {
-            Debug.Log("Ray = " + SP.transform.parent.name + " " + SP.transform.name + " " + "hit = " + hit.transform.parent + " " + hit.transform.name);
+            possibleRooms.Add(rooms[i]);
+        }
+        RaycastHit hitN;
+        RaycastHit hitS;
+        RaycastHit hitE;
+        RaycastHit hitW;
+        if (SP.openingDirection != 2 && Physics.Raycast(SP.transform.position, transform.forward, out hitN, 100))
+        {
+            if (hitN.transform.tag != "SpawnPoint")
+            {
+                for (int i = 0; i < rooms.Length; i++)
+                {
+                    bool hasTroubleSP = false;
+                    for (int s = 0; s < rooms[i].roomSpawnPoints.Length; s++)
+                    {
+                        if (rooms[i].roomSpawnPoints[s].openingDirection == 1)
+                        {
+                            hasTroubleSP = true;
+                        }
+                    }
 
+                    if (possibleRooms.Contains(rooms[i]) && hasTroubleSP == true)
+                    {
+                        possibleRooms.Remove(rooms[i]);
+                    }
+                }
+            }
+        }
+        if (SP.openingDirection != 1 && Physics.Raycast(SP.transform.position, -transform.forward, out hitS, 100))
+        {
+            if (hitS.transform.tag != "SpawnPoint")
+            {
+                for (int i = 0; i < rooms.Length; i++)
+                {
+                    bool hasTroubleSP = false;
+                    for (int s = 0; s < rooms[i].roomSpawnPoints.Length; s++)
+                    {
+                        if (rooms[i].roomSpawnPoints[s].openingDirection == 2)
+                        {
+                            hasTroubleSP = true;
+                        }
+                    }
+
+                    if (possibleRooms.Contains(rooms[i]) && hasTroubleSP == true)
+                    {
+                        possibleRooms.Remove(rooms[i]);
+                    }
+                }
+            }
+        }
+        if (SP.openingDirection != 3 && Physics.Raycast(SP.transform.position, transform.right, out hitE, 100))
+        {
+            if (hitE.transform.tag != "SpawnPoint")
+            {
+                for (int i = 0; i < rooms.Length; i++)
+                {
+                    bool hasTroubleSP = false;
+                    for (int s = 0; s < rooms[i].roomSpawnPoints.Length; s++)
+                    {
+                        if (rooms[i].roomSpawnPoints[s].openingDirection == 4)
+                        {
+                            hasTroubleSP = true;
+                        }
+                    }
+
+                    if (possibleRooms.Contains(rooms[i]) && hasTroubleSP == true)
+                    {
+                        possibleRooms.Remove(rooms[i]);
+                    }
+                }
+            }
+        }
+        if (SP.openingDirection != 4 && Physics.Raycast(SP.transform.position, -transform.right, out hitW, 100))
+        {
+            if (hitW.transform.tag != "SpawnPoint")
+            {
+                for (int i = 0; i < rooms.Length; i++)
+                {
+                    bool hasTroubleSP = false;
+                    for (int s = 0; s < rooms[i].roomSpawnPoints.Length; s++)
+                    {
+                        if (rooms[i].roomSpawnPoints[s].openingDirection == 3)
+                        {
+                            hasTroubleSP = true;
+                        }
+                    }
+
+                    if (possibleRooms.Contains(rooms[i]) && hasTroubleSP == true)
+                    {
+                        possibleRooms.Remove(rooms[i]);
+                    }
+                }
+            }
         }
 
-
-        return null;
+        return possibleRooms[Random.Range(0, possibleRooms.Count)];
     }
 }
