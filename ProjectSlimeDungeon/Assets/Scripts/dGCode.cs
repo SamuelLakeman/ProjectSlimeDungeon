@@ -4,8 +4,19 @@ using UnityEngine;
 
 public class dGCode : MonoBehaviour
 {
-    public int roomNumber;
+    [Header("Generatior Data")]
+    public bool randomizeSeed;
+    public int seed = 0;
     public float generationSpeed;
+
+    [Header("Dungeon Generation Data")]
+    public List<SpawnPoint> openSpawns = new List<SpawnPoint>();
+    public List<SpawnPoint> SPList = new List<SpawnPoint>();
+    public List<Room> existingRoomsList = new List<Room>();
+    private Room startRoom;
+    private int roomNumber;
+    private bool closeOpenDoorways;
+    public int mapMinX, mapMaxX, mapMinZ, mapMaxZ;
 
     [Header("Room Prefabs")]
     public Room spawn;
@@ -14,21 +25,14 @@ public class dGCode : MonoBehaviour
     public Room[] rightConnectionRooms;
     public Room[] leftConnectionRooms;
 
-    [Header("Dungeon Generation Data")]
-    public List<SpawnPoint> openSpawns = new List<SpawnPoint>();
-    public List<SpawnPoint> SPList = new List<SpawnPoint>();
-    private Room startRoom;
-    private bool closeOpenDoorways;
-    public int mapMinX, mapMaxX, mapMinZ, mapMaxZ;
-
-    [Header("Dungeon Information")]
-    public int seed;
-    public bool generationComplete;
-
     public void Start()
     {
         openSpawns = new List<SpawnPoint>();
-        seed = Random.Range(0, int.MaxValue);
+        if (randomizeSeed)
+        {
+            seed = Random.Range(0, int.MaxValue);
+        }
+        Random.InitState(seed);
         StartGeneration();
     }
 
@@ -40,7 +44,7 @@ public class dGCode : MonoBehaviour
         {
             openSpawns.Add(s.GetComponent<Room>().roomSpawnPoints[i]);
         }
-
+        existingRoomsList.Add(startRoom);
         StartCoroutine("GenerateFirstLayer");
 
 
@@ -50,7 +54,15 @@ public class dGCode : MonoBehaviour
     {
         while (openSpawns.Count > 0)
         {
-            SpawnPoint nextSpawn = openSpawns[Random.Range(0, openSpawns.Count)];
+            SpawnPoint nextSpawn = openSpawns[Random.Range(0,openSpawns.Count)];
+            if (nextSpawn.partner != null)
+            {
+                if (nextSpawn.partner.spawned == true)
+                {
+                    nextSpawn.spawned = true;
+                    openSpawns.Remove(nextSpawn);
+                }
+            }
             if (nextSpawn == null)
             {
                 Debug.Log("we got a nuller!");
@@ -79,22 +91,15 @@ public class dGCode : MonoBehaviour
                             GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
                             newRoom.name += roomNumber;
                             nextSpawn.spawned = true;
-                            if(nextSpawn.partner != null)
-                            {
-                                if (openSpawns.Contains(nextSpawn.partner))
-                                {
-                                    openSpawns.Remove(nextSpawn.partner);
-                                }
-                                nextSpawn.partner.spawned = true;
-                            }
                             for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
                             {
                                 if (newRoom.GetComponent<Room>().roomSpawnPoints[i].openingDirection != 2)
                                 {
-                                    openSpawns.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
+                                   openSpawns.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
                                     SPList.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
                                 }
                             }
+                            existingRoomsList.Add(newRoom.GetComponent<Room>());
                             openSpawns.Remove(nextSpawn);
                         }
                         else if (nextSpawn.openingDirection == 2)
@@ -103,14 +108,6 @@ public class dGCode : MonoBehaviour
                             GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
                             newRoom.name += roomNumber;
                             nextSpawn.spawned = true;
-                            if (nextSpawn.partner != null)
-                            {
-                                if (openSpawns.Contains(nextSpawn.partner))
-                                {
-                                    openSpawns.Remove(nextSpawn.partner);
-                                }
-                                nextSpawn.partner.spawned = true;
-                            }
                             for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
                             {
                                 if (newRoom.GetComponent<Room>().roomSpawnPoints[i].openingDirection != 1)
@@ -119,6 +116,7 @@ public class dGCode : MonoBehaviour
                                     SPList.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
                                 }
                             }
+                            existingRoomsList.Add(newRoom.GetComponent<Room>());
                             openSpawns.Remove(nextSpawn);
                         }
                         else if (nextSpawn.openingDirection == 3)
@@ -127,14 +125,6 @@ public class dGCode : MonoBehaviour
                             GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
                             newRoom.name += roomNumber;
                             nextSpawn.spawned = true;
-                            if (nextSpawn.partner != null)
-                            {
-                                if (openSpawns.Contains(nextSpawn.partner))
-                                {
-                                    openSpawns.Remove(nextSpawn.partner);
-                                }
-                                nextSpawn.partner.spawned = true;
-                            }
                             for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
                             {
                                 if (newRoom.GetComponent<Room>().roomSpawnPoints[i].openingDirection != 4)
@@ -143,6 +133,7 @@ public class dGCode : MonoBehaviour
                                     SPList.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
                                 }
                             }
+                            existingRoomsList.Add(newRoom.GetComponent<Room>());
                             openSpawns.Remove(nextSpawn);
                         }
                         else if (nextSpawn.openingDirection == 4)
@@ -151,14 +142,6 @@ public class dGCode : MonoBehaviour
                             GameObject newRoom = Instantiate(selectedRoom.gameObject, nextSpawn.transform.position, selectedRoom.gameObject.transform.rotation);
                             newRoom.name += roomNumber;
                             nextSpawn.spawned = true;
-                            if (nextSpawn.partner != null)
-                            {
-                                if (openSpawns.Contains(nextSpawn.partner))
-                                {
-                                    openSpawns.Remove(nextSpawn.partner);
-                                }
-                                nextSpawn.partner.spawned = true;
-                            }
                             for (int i = 0; i < newRoom.GetComponent<Room>().roomSpawnPoints.Length; i++)
                             {
                                 if (newRoom.GetComponent<Room>().roomSpawnPoints[i].openingDirection != 3)
@@ -167,6 +150,7 @@ public class dGCode : MonoBehaviour
                                     SPList.Add(newRoom.GetComponent<Room>().roomSpawnPoints[i]);
                                 }
                             }
+                            existingRoomsList.Add(newRoom.GetComponent<Room>());
                             openSpawns.Remove(nextSpawn);
                         }
                     }
@@ -184,21 +168,25 @@ public class dGCode : MonoBehaviour
                 {
                     GameObject newRoom = Instantiate(topConnectionRooms[0].gameObject, SPList[i].transform.position, topConnectionRooms[0].gameObject.transform.rotation);
                     newRoom.name += roomNumber;
+                    existingRoomsList.Add(newRoom.GetComponent<Room>());
                 }
                 else if (SPList[i].openingDirection == 2)
                 {
                     GameObject newRoom = Instantiate(bottomConnectionRooms[0].gameObject, SPList[i].transform.position, bottomConnectionRooms[0].gameObject.transform.rotation);
                     newRoom.name += roomNumber;
+                    existingRoomsList.Add(newRoom.GetComponent<Room>());
                 }
                 else if (SPList[i].openingDirection == 3)
                 {
                     GameObject newRoom = Instantiate(leftConnectionRooms[0].gameObject, SPList[i].transform.position, leftConnectionRooms[0].gameObject.transform.rotation);
                     newRoom.name += roomNumber;
+                    existingRoomsList.Add(newRoom.GetComponent<Room>());
                 }
                 else if (SPList[i].openingDirection == 4)
                 {
                     GameObject newRoom = Instantiate(rightConnectionRooms[0].gameObject, SPList[i].transform.position, rightConnectionRooms[0].gameObject.transform.rotation);
                     newRoom.name += roomNumber;
+                    existingRoomsList.Add(newRoom.GetComponent<Room>());
                 }
                 roomNumber++;
                 SPList[i].spawned = true;
@@ -213,12 +201,17 @@ public class dGCode : MonoBehaviour
         {
             possibleRooms.Add(rooms[i]);
         }
+        if (existingRoomsList.Count < 21)
+        {
+            possibleRooms.Remove(rooms[0]);
+        }
         RaycastHit hitN;
         RaycastHit hitS;
         RaycastHit hitE;
         RaycastHit hitW;
         if (SP.openingDirection != 2 && Physics.Raycast(SP.transform.position, transform.forward, out hitN, 100))
         {
+            Debug.DrawLine(SP.transform.position, SP.transform.position + (transform.forward*100), Color.blue, generationSpeed * 2);
             if (hitN.transform.tag != "SpawnPoint")
             {
                 for (int i = 0; i < rooms.Length; i++)
@@ -238,9 +231,36 @@ public class dGCode : MonoBehaviour
                     }
                 }
             }
+            else if (hitN.transform.tag == "SpawnPoint")
+            {
+                if (hitN.transform.gameObject.GetComponent<SpawnPoint>().spawned == true)
+                {
+                    for (int i = 0; i < rooms.Length; i++)
+                    {
+                        bool hasNeededSP = false;
+                        for (int s = 0; s < rooms[i].roomSpawnPoints.Length; s++)
+                        {
+                            if (rooms[i].roomSpawnPoints[s].openingDirection == 1)
+                            {
+                                hasNeededSP = true;
+                            }
+                        }
+
+                        if (hasNeededSP == true && !possibleRooms.Contains(rooms[i]))
+                        {
+                            possibleRooms.Add(rooms[i]);
+                        }
+                        if (hasNeededSP == false)
+                        {
+                            possibleRooms.Remove(rooms[i]);
+                        }
+                    }
+                }
+            }
         }
         if (SP.openingDirection != 1 && Physics.Raycast(SP.transform.position, -transform.forward, out hitS, 100))
         {
+            Debug.DrawLine(SP.transform.position, SP.transform.position - (transform.forward * 100), Color.blue, generationSpeed * 2);
             if (hitS.transform.tag != "SpawnPoint")
             {
                 for (int i = 0; i < rooms.Length; i++)
@@ -260,9 +280,36 @@ public class dGCode : MonoBehaviour
                     }
                 }
             }
+            else if (hitS.transform.tag == "SpawnPoint")
+            {
+                if (hitS.transform.gameObject.GetComponent<SpawnPoint>().spawned == true)
+                {
+                    for (int i = 0; i < rooms.Length; i++)
+                    {
+                        bool hasNeededSP = false;
+                        for (int s = 0; s < rooms[i].roomSpawnPoints.Length; s++)
+                        {
+                            if (rooms[i].roomSpawnPoints[s].openingDirection == 2)
+                            {
+                                hasNeededSP = true;
+                            }
+                        }
+
+                        if (hasNeededSP == true && !possibleRooms.Contains(rooms[i]))
+                        {
+                            possibleRooms.Add(rooms[i]);
+                        }
+                        if (hasNeededSP == false)
+                        {
+                            possibleRooms.Remove(rooms[i]);
+                        }
+                    }
+                }
+            }
         }
         if (SP.openingDirection != 3 && Physics.Raycast(SP.transform.position, transform.right, out hitE, 100))
         {
+            Debug.DrawLine(SP.transform.position, SP.transform.position + (transform.right * 100), Color.blue, generationSpeed * 2);
             if (hitE.transform.tag != "SpawnPoint")
             {
                 for (int i = 0; i < rooms.Length; i++)
@@ -282,9 +329,36 @@ public class dGCode : MonoBehaviour
                     }
                 }
             }
+            else if (hitE.transform.tag == "SpawnPoint")
+            {
+                if (hitE.transform.gameObject.GetComponent<SpawnPoint>().spawned == true)
+                {
+                    for (int i = 0; i < rooms.Length; i++)
+                    {
+                        bool hasNeededSP = false;
+                        for (int s = 0; s < rooms[i].roomSpawnPoints.Length; s++)
+                        {
+                            if (rooms[i].roomSpawnPoints[s].openingDirection == 4)
+                            {
+                                hasNeededSP = true;
+                            }
+                        }
+
+                        if (hasNeededSP == true && !possibleRooms.Contains(rooms[i]))
+                        {
+                            possibleRooms.Add(rooms[i]);
+                        }
+                        if (hasNeededSP == false)
+                        {
+                            possibleRooms.Remove(rooms[i]);
+                        }
+                    }
+                }
+            }
         }
         if (SP.openingDirection != 4 && Physics.Raycast(SP.transform.position, -transform.right, out hitW, 100))
         {
+            Debug.DrawLine(SP.transform.position, SP.transform.position - (transform.right * 100), Color.blue, generationSpeed*2);
             if (hitW.transform.tag != "SpawnPoint")
             {
                 for (int i = 0; i < rooms.Length; i++)
@@ -304,8 +378,38 @@ public class dGCode : MonoBehaviour
                     }
                 }
             }
-        }
+            else if (hitW.transform.tag == "SpawnPoint")
+            {
+                if (hitW.transform.gameObject.GetComponent<SpawnPoint>().spawned == true)
+                {
+                    for (int i = 0; i < rooms.Length; i++)
+                    {
+                        bool hasNeededSP = false;
+                        for (int s = 0; s < rooms[i].roomSpawnPoints.Length; s++)
+                        {
+                            if (rooms[i].roomSpawnPoints[s].openingDirection == 3)
+                            {
+                                hasNeededSP = true;
+                            }
+                        }
 
+                        if (hasNeededSP == true && !possibleRooms.Contains(rooms[i]))
+                        {
+                            possibleRooms.Add(rooms[i]);
+                        }
+                        if (hasNeededSP == false)
+                        {
+                            possibleRooms.Remove(rooms[i]);
+                        }
+                    }
+                }
+            }
+        }
+        if(possibleRooms.Count == 0)
+        {
+            Debug.Log("well would you look at that, it actually happened");
+            possibleRooms.Add(rooms[0]);
+        }
         return possibleRooms[Random.Range(0, possibleRooms.Count)];
     }
 }

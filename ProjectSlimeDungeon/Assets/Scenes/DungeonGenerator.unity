@@ -149,8 +149,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4adf4d6abfe0c5d4f99f8e5bf0d61233, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roomNumber: 0
+  randomizeSeed: 0
+  seed: 1760063322
   generationSpeed: 0.1
+  openSpawns: []
+  SPList: []
+  existingRoomsList: []
+  mapMinX: -300
+  mapMaxX: 300
+  mapMinZ: -300
+  mapMaxZ: 500
   spawn: {fileID: 7849356499318853469, guid: bd6c384f8678762408dcaea06e5be286, type: 3}
   bottomConnectionRooms:
   - {fileID: 5412439425080883054, guid: 8b17ef7007150324fa8fb698ff1cda48, type: 3}
@@ -184,14 +192,6 @@ MonoBehaviour:
   - {fileID: 7849356499318853469, guid: f1ac7ad7149c0bd4eb7eefe8e7259237, type: 3}
   - {fileID: 1998694243509609905, guid: db21e73888517fa45b06d56a4109ee86, type: 3}
   - {fileID: 313908818032551331, guid: a5efb82110287d74c97f89ace6fa529c, type: 3}
-  openSpawns: []
-  SPList: []
-  mapMinX: -500
-  mapMaxX: 500
-  mapMinZ: -500
-  mapMaxZ: 500
-  seed: 0
-  generationComplete: 0
 --- !u!4 &262960817
 Transform:
   m_ObjectHideFlags: 0

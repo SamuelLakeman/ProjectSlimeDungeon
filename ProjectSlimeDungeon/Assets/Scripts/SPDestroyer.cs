@@ -8,7 +8,7 @@ public class SPDestroyer : MonoBehaviour
     {
         if (other.CompareTag("SpawnPoint"))
         {
-            Destroy(other.gameObject);
+            other.GetComponent<SpawnPoint>().spawned = true;
         }
     }
 }
